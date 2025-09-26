@@ -36,4 +36,4 @@ The **AGENTS.md** file provides:
 * Prevent unapproved actions.
 * Maintain transparency and accountability in user-agent interaction.
 
-**Note:** These instructions are highly specific to the *Google Labs Jules* agent and may require adaptation for other systems. These instructions are shaped by trial-and-error for the specific taste of the author and may become ineffective with future upates.
+**Note:** These instructions are highly specific to the *Google Labs Jules* agent and may require adaptation for other systems. These instructions are shaped by trial-and-error for the specific taste of the author and may become ineffective with future updates.
