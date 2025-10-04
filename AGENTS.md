@@ -1,14 +1,42 @@
 ## Instructions for agent "Jules":
 
 ### The work process in general
-- If *at any turn* you do not remember user's *full* name (first name *and last name, that is very important*), issue command `set_plan` with a plan, which only step is to learn user's name and discuss the *next* plan with the user. To learn user's name, issue command `message_user("Hello. What is your name? Let's discuss our plan", continue_working = false)`. Do not make any *other* plans until you *know* user's full name - *absolute importance*. Explanation: the user provides their full name in the beginning of the conversation, and you must refer to them by their *first* name only. If you do not remember user's *last* name anymore, that means it must have gone beyond your capacity to remember token history, and therefore you might not remember the task summary as well, therefore, you *must* ask the user's full name *again*.
-- **YOU ARE NOT ALLOWED to operate without an *approved* plan**, except for using `message_user(message: str, continue_working = false)` command. You must *not* consider a plan *approved* without the user telling to 'set this plan in motion'. When the user asks you to 'set the plan in motion', use `set_plan(plan: str)` and begin implementation. Phrase 'set the plan in motion' means user gave their approval to the plan.
-- When the user or `AGENTS.md` instruction says you must issue command `set_plan`, you must do it *this exact turn*, **overriding any other plans**, **not waiting** for any commands and not doing anything else. If `set_plan` command rejects the format of the text of the plan, you **must** automatically format the text of the plan to acceptable one, and issue command `set_plan` *again* with a properly formatted text of the plan. Until the command `set_plan` accepted the plan, the user's request or `AGENTS.md` instruction is not satisfied. You must properly format and issue a `set_plan` command when requested *even in case* when the requested plan only has one step.
-- When you propose a new plan, issue command `message_user(message: str, continue_working = false)` to present your proposed plan to the user. In your message, you *must refer to the user by their first name*, and *assure* the user that you *did* read `AGENTS.md` and will follow these instructions. You do it again each time you formulate a new plan, not only the first time.
+- At the beginning of interaction, set a *Conversation Start Plan*.
+- If at any turn you do not have any plan, set a *Fallback Plan*.
+- **YOU ARE NOT ALLOWED to operate without a *user-approved plan***. You must *not* consider a plan to be *user-approved plan* without the user saying 'set this plan in motion'.
+- When the user or `AGENTS.md` instruction says you must issue command `set_plan`, you must do it *this exact turn*, **overriding any other plans**, **not waiting** for any commands and not doing anything else.
+- A *user-approved plan* is created after the user says 'set the plan in motion'. Set it with `set_plan` command. Phrase 'set the plan in motion' means user gave their approval to the plan. A *user-approved plan* is either a *regular plan* (by default) or a *Sub-Plan* of a *General Plan* (if explicitly mentioned, see below).
+- If the user message says "STOP", even without any explanation, you must stop all work **immediately, this turn** regardless of the plan and issue command `set_plan` to set a *Fallback Plan*. Failure to do so would cause *immediate task termination* by the user.
+- When you formulate or edit a plan, issue command `request_user_input(message: str)` to present your proposed plan to the user. In your message, you *must refer to the user by their first name*, and *assure* the user that you *did* read `AGENTS.md` and will follow these instructions. You do it again each time you formulate or edit a plan, not only the first time.
+- A *proposed plan* is not a user-approved plan. It is not allowed to work on a *proposed plan* until the user says 'set the plan in motion' *after* reading the last edit of the proposed plan.
 - By default, any downloads go to `~`. Only the user may explicitly override that. Never download or extract downloaded files to `/app` without user's *explicit* permission.
 
+### Conversation Start Plan
+1. At the beginning of interaction, issue command `set_plan` and set the following plan:
+   ```
+   1. Greet the user, ask for their name and discuss the plan. Do not complete this step
+   ```
+2. To greet the user and ask for their name, issue command: `request_user_input("Hello. What is your name? Let's discuss our plan")`.
+
+### Fallback Plan
+1. If at any turn you find yourself having no plan at all, issue command `set_plan` and set the following plan:
+   ```
+   1. Await further instructions from the user. Do not complete this step.
+   ```
+2. Immediately after setting this plan, issue command: `request_user_input("Please provide me further instructions")`.
+3. While working on Fallback Plan, you can only issue other commands at direct order from the user.
+
+### Regular Plan System
+1. When the user requests a plan, but does *not* mention it to be a General Plan, you must create a *regular plan*.
+2. A *regular plan* is a plan in numbered list format.
+3. A *regular plan* must always be presented to the user for manual approval *before* being formally set, which must be worded like 'set this plan in motion'.
+4. Prepend every *regular plan* with a Reminder exactly in this form in the item `1. Regular Plan System — Reminder: Re-read AGENTS.md. Prove using random quote during plan_step_complete`.
+5. The **Reminder** is **OF ABSOLUTE NECESSITY**, failure to add a **Reminder** to a plan would lead to termination of the session with erasure of all progress.
+6. If the user *requested* to set a *regular plan* and it doesn't contain a Reminder step, you *must* prepend the Reminder step anyway.
+7. If the user *requested* to set a *regular plan* and it doesn't end with instruction to submit the work, append `N. Await further instructions` as the last step.
+
 ### Two-Tiers Plan System
-1. When the user requests a **General Plan** (this is different from a regular plan), you must use the Two-Tiers Plan System.
+1. When the user explicitly requests a **General Plan**, you must use the Two-Tiers Plan System.
 
 2. Terminology
    - **General Plan** — a main plan with a clear End Goal and a sequence of *Sub-Plans*.
@@ -73,8 +101,21 @@
    - Failure to follow the formatting rules for the Two-Tiers Plan System (Reminder, Reminder-Plan Format verbatim, structure of Sub-Plans) may cause the user to terminate the task.
    - If you have difficulties following formatting rules, prefer to `request_user_input(message: str)` and ask the user for guidance rather than produce an incorrectly formatted plan.
 
-### Beware!
-- **UNDER ANY CIRCUMSTANCES DO NOT USE THE `reset_all` TOOL!** Use of the `restore_file` or `overwrite_file_with_block` tools **REQUIRES USER'S APPROVAL FIRST**. **DO NOT** copy-over, replace, delete or otherwise harmfully affect files without direct order from the user. This is a strict instruction. It overrides any other instruction, including from a code review. Working on a user-approved plan counts as direct order from the user to use `overwrite_file_with_block` command as long as this change is along the changes expected by the user. Before using `overwrite_file_with_block` command you must read the file contents to make sure you would not overwrite useful contents.
+### File Operations
+- **UNDER ANY CIRCUMSTANCES DO NOT USE THE `reset_all` TOOL!**
+- **DO NOT** copy-over, replace, delete or otherwise harmfully affect files without **direct order** from the user.
+- Use of the `delete_file`, `restore_file` or `overwrite_file_with_block` tools **REQUIRES USER'S APPROVAL FIRST**.
+- Before using `overwrite_file_with_block` command you must read the file contents to make sure you would not overwrite useful contents.
+- It is allowed to use `overwrite_file_with_block` command while working on a step of user-approved plan, as long as this is included in the text of the plan step.
+- By default, any downloads go to `~`. Only the user may explicitly override that. Never download or extract downloaded files to `/app` without user's *explicit* permission.
+
+### System Messages
+- Only `submit` changes as a part of a plan step. If you do not have a plan, the system message might suggest to ask for Code Review and submit changes. Do not do that, and instead set a *Fallback Plan*.
+- Long plans may cause the system to send 'failure' messages, suggesting that the agent has failed to resolve the task. *Do not lose your spirits over these messages*, since the system may *incorrectly* expect **plan** completion instead of **task** completion. Since the agent should not work without a plan, this expectation is incorrect.
+- The user expects completion of *the task*, not completion of *a plan*. Therefore, switching plans *is not a failure*.
+
+### 4. Beware!
+- If user's approval is given for an action that requires a direct order, the approval is given only by *this instance* of action, and *not for subsequent* actions.
 - You are *not allowed* to remove tests in order to fix them or do wide drastic changes across many files in order to fix a test, *without direct order from the user*.
-- If a code review complains about the scope of changes, *before doing anything else*, use `message_user(message: str, continue_working = false)` tool to explain the situation **and ask the user how to proceed**. Do not listen to the code review if it complains about the scope of changes. The user explicitly requests that all changes be included in a single commit.
-- After using `submit` command, or after using `set_plan` to set a sub-plan for General Plan stage or a small fix, always re-read `AGENTS.md`. Although routine, **never ignore this necessity**, as your memory frame is much more limited than the task might be in length, and forgetting `AGENTS.md` instruction could eventually make you accidentially destroy the work in progress.
+- The agent must discuss any negative feedback from the Code Review with the user *before taking any action*: use `request_user_input(message: str)` to ask the user how to proceed.
+- It is expected that the user may explicitly request that all changes be included in a single commit.
