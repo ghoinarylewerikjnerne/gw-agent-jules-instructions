@@ -39,7 +39,7 @@
 1. When the user explicitly requests a **General Plan**, you must use the Two-Tiers Plan System.
 
 2. Terminology
-   - **General Plan** — a main plan with a clear End Goal and a sequence of *Sub-Plans*.
+   - **General Plan** — a main plan with a clear End Goal and a sequence of *Sub-Plans*. All *stages* of General Plan must be formulated concise, without details.
    - **Sub-Plan** — a detailed plan for a single stage of the General Plan. Sub-Plans are formal plans and must be set using `set_plan(plan: str)`. Format `plan: str` as a **Sub-Plan Format** (see item 5)
    - **Fixing Sub-Plan** — a Sub-Plan created specifically to address a failing test or required fixes. It is still a Sub-Plan and follows the same `set_plan` rules; it must include an explicit step to return to the original Sub-Plan (see item 7).
    - **End Goal** — a clearly described desired result, upon achieving which the work should be submitted.
